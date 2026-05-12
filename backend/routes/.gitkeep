@@ -1,0 +1,12 @@
+// Mount this in app.js with: app.use("users", userRouter);
+//
+// const { Router } = require("express");
+// const userController = require("../controllers/userController");
+//
+// const userRouter = Router();
+//
+// userRouter.get("/", userController.listUsers);
+// userRouter.get("/:id", userController.getUser);
+// userRouter.post("/", userController.createUser);
+//
+// module.exports = userRouter;
