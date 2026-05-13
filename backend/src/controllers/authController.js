@@ -38,7 +38,7 @@ const register = async (req, res, next) => {
             where: { email: normalizedEmail } 
         });
         if (existing) {
-            res.status(409).json({ message: 'Email is already registered.' }); 
+            return res.status(409).json({ message: 'Email is already registered.' }); 
         }
         
         const passwordHash = await bcrypt.hash(password, 12);
