@@ -12,19 +12,18 @@ const app = express();
 // Middleware
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
         credentials: true,
         optionsSuccessStatus: 200,
     })
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.use(express.urlencoded({ extended: true }));
 
 // Routes
     // Health check
