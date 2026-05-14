@@ -14,7 +14,7 @@ passport.use(
                 const user = await prisma.user.findUnique({ 
                     where: { email: email.toLowerCase().trim() }
                 });
-                if (!user) {
+                if (!user || !user.password) {
                     return done(null, false, { message: 'Invalid email or password.' });
                 }
                 const passwordMatch = await bcrypt.compare(password, user.password);
@@ -39,50 +39,54 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-            const existingByGitHub = await prisma.user.findUnique({
-                where: { githubId: profile.id },
-            });
-            if (existingByGitHub) {
-                const email = 
-                    profile.emails[0]?.value?.toLowerCase().trim() ?? null;
-                
+                const githubId = String(profile.id);
+
+                const existingByGitHub = await prisma.user.findUnique({
+                    where: { githubId },
+                });
+                if (existingByGitHub) {
+                    return done(null, existingByGitHub);
+                }
+
+                const email =
+                    profile.emails?.[0]?.value?.toLowerCase().trim() ?? null;
+
                 if (email) {
                     const existingByEmail = await prisma.user.findUnique({
                         where: { email },
                     });
-
                     if (existingByEmail) {
                         const linked = await prisma.user.update({
                             where: { id: existingByEmail.id },
-                            data: {
-                                githubId: profile.id,
-                                username: existingByEmail.username ?? profile.username ?? null,
+                            data: { 
+                                githubId,
+                                username: 
+                                    existingByEmail.username ?? profile.username ?? null,
                                 displayName:
                                     existingByEmail.displayName ?? profile.displayName ?? null,
                                 avatarUrl:
-                                    existingByEmail.avatarUrl ?? profile.photos[0]?.value ?? null,
+                                    existingByEmail.avatarUrl ?? profile.photos?.[0]?.value ?? null,
                             },
                         });
                         return done(null, linked);
                     }
                 }
-
-                // 3. New user
+                
                 const created = await prisma.user.create({
                     data: {
-                        githubId: profile.id,
+                        githubId,
                         email,
                         username: profile.username ?? null,
                         displayName: profile.displayName ?? null,
-                        avatarUrl: profile.photos[0]?.value ?? null,
-                    }
+                        avatarUrl: profile.photos?.[0]?.value ?? null,
+                    },
                 });
                 return done(null, created);
-            }} catch (err) {
+            } catch (err) {
                 return done(err);
             }
         }
-    )
+    )      
 );
 
 passport.serializeUser((user, done) => {

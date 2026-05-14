@@ -17,23 +17,23 @@ authRouter.get(
 authRouter.get('/github/callback', (req, res, next) => {
     passport.authenticate('github', (err, user) => {
         if (err) {
-            console.log('GitHub auth error:', err);
-            console.log('Cause:', err.oauthError?.data || err.oauthError);
+            console.error('GitHub OAuth error:', err);
             return next(err);
         }
         if (!user) {
-            return res.redirect(
-                `${process.env.FRONTEND_URL}/login?error=github`
-            );
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=github`);
         }
         req.session.regenerate((regenErr) => {
             if (regenErr) return next(regenErr);
             req.login(user, (loginErr) => {
                 if (loginErr) return next(loginErr);
-                return res.redirect(`${process.env.FRONTEND_URL}/`);
+                req.session.save((saveErr) => {
+                    if (saveErr) return next(saveErr);
+                    return res.redirect(`${process.env.FRONTEND_URL}/`);
+                });
             });
         });
-    }) (req, res, next);
+    })(req, res, next);
 });
 
 module.exports = authRouter;
