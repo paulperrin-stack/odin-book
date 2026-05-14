@@ -64,7 +64,7 @@ const login = (req, res, next) => {
         if (err) return next(err);
 
         if (!user) {
-            res.status(401).json({ error: info?.message ?? 'Invalid credentials.' });
+            return res.status(401).json({ error: info?.message ?? 'Invalid credentials.' });
         }
 
         req.session.regenerate((regenErr) => {
@@ -72,7 +72,7 @@ const login = (req, res, next) => {
 
             req.login(user, (loginErr) => {
                 if (loginErr) return next(loginErr);
-                return res.json({ user: safeUser(user) });
+                return res.json({ user: safeUser(user) });
             });
         });
     })(req, res, next);

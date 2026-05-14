@@ -1,5 +1,8 @@
 const passport = require('passport');
+
 const { Strategy: LocalStrategy } = require('passport-local');
+const { Strategy: GitHubStrategy } = require('passport-github2');
+
 const bcrypt = require('bcryptjs');
 const prisma = require('../db/prismaClient');
 
@@ -20,6 +23,62 @@ passport.use(
                 }
                 return done(null, user);
             } catch (err) {
+                return done(err);
+            }
+        }
+    )
+);
+
+passport.use(
+    new GitHubStrategy(
+        {
+            clientID: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            callbackURL: process.env.GITHUB_CALLBACK_URL,
+            scope: ['user:email'],
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+            const existingByGitHub = await prisma.user.findUnique({
+                where: { githubId: profile.id },
+            });
+            if (existingByGitHub) {
+                const email = 
+                    profile.emails[0]?.value?.toLowerCase().trim() ?? null;
+                
+                if (email) {
+                    const existingByEmail = await prisma.user.findUnique({
+                        where: { email },
+                    });
+
+                    if (existingByEmail) {
+                        const linked = await prisma.user.update({
+                            where: { id: existingByEmail.id },
+                            data: {
+                                githubId: profile.id,
+                                username: existingByEmail.username ?? profile.username ?? null,
+                                displayName:
+                                    existingByEmail.displayName ?? profile.displayName ?? null,
+                                avatarUrl:
+                                    existingByEmail.avatarUrl ?? profile.photos[0]?.value ?? null,
+                            },
+                        });
+                        return done(null, linked);
+                    }
+                }
+
+                // 3. New user
+                const created = await prisma.user.create({
+                    data: {
+                        githubId: profile.id,
+                        email,
+                        username: profile.username ?? null,
+                        displayName: profile.displayName ?? null,
+                        avatarUrl: profile.photos[0]?.value ?? null,
+                    }
+                });
+                return done(null, created);
+            }} catch (err) {
                 return done(err);
             }
         }
