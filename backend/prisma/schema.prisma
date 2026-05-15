@@ -7,15 +7,53 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// Starter model - extend or replace as the project grows.
 model User {
-    id          Int             @id @default(autoincrement())
-    email       String?         @unique // nullable: GitHub users may not return one
-    password    String?                 // nullable: OAuth users have no password
-    githubId    String?         @unique // OAuth identify
-    username    String?         
-    displayName String?
-    avatarUrl   String?
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
+    id           Int      @id @default(autoincrement())
+    email        String?  @unique
+    username     String?  @unique
+    displayName  String?
+    passwordHash String?
+    githubId     String?  @unique
+    avatarUrl    String?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    posts     Post[]
+    following Follow[] @relation("UserFollowing")
+    followers Follow[] @relation("UserFollowers")
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    content   String
+    authorId  Int
+    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Follow {
+    id          Int          @id @default(autoincrement())
+    followerId  Int
+    followingId Int
+    status      FollowStatus @default(PENDING)
+    follower    User         @relation("UserFollowing", fields: [followerId],  references: [id], onDelete: Cascade)
+    following   User         @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+    createdAt   DateTime     @default(now())
+
+    @@unique([followerId, followingId])
+}
+
+enum FollowStatus {
+    PENDING
+    ACCEPTED
+}
+
+model Session {
+    sid    String   @id @db.VarChar
+    sess   Json     @db.Json
+    expire DateTime @db.Timestamp(6)
+
+    @@map("session")
+    @@index([expire], map: "IDX_session_expire")
 }
