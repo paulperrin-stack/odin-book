@@ -5,7 +5,7 @@ const prisma = require('../db/prismaClient');
 // Helpers
 
 function safeUser(user) {
-    const { password, ...rest } = user;
+    const { passwordHash, ...rest } = user;
     return rest;
 }
 
@@ -47,7 +47,7 @@ const register = async (req, res, next) => {
         const user = await prisma.user.create({
             data: {
                 email: normalizedEmail,
-                password: passwordHash,
+                passwordHash,
             },
         });
 

@@ -6,6 +6,7 @@ const cors = require('cors');
 const sessionMiddleware = require('./src/config/session');
 const passport = require('./src/config/passport');
 const authRoutes = require('./src/routes/authRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 const app = express();
 
@@ -31,8 +32,9 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Backend is running' });
 });
 
-    // Auth routes
-app.use('/auth', authRoutes);
+    // Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res) => {

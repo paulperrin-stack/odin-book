@@ -14,10 +14,10 @@ passport.use(
                 const user = await prisma.user.findUnique({ 
                     where: { email: email.toLowerCase().trim() }
                 });
-                if (!user || !user.password) {
+                if (!user || !user.passwordHash) {
                     return done(null, false, { message: 'Invalid email or password.' });
                 }
-                const passwordMatch = await bcrypt.compare(password, user.password);
+                const passwordMatch = await bcrypt.compare(password, user.passwordHash);
                 if (!passwordMatch) {
                     return done(null, false, { message: 'Invalid email or password.' });
                 }
