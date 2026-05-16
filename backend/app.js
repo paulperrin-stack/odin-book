@@ -7,6 +7,7 @@ const sessionMiddleware = require('./src/config/session');
 const passport = require('./src/config/passport');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const postRoutes = require('./src/routes/postRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.get('/health', (req, res) => {
     // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res) => {

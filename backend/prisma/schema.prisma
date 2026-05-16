@@ -19,6 +19,8 @@ model User {
     updatedAt    DateTime @updatedAt
 
     posts     Post[]
+    comments  Comment[]
+    likes     Like[]
     following Follow[] @relation("UserFollowing")
     followers Follow[] @relation("UserFollowers")
 }
@@ -28,8 +30,32 @@ model Post {
     content   String
     authorId  Int
     author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    comments  Comment[]
+    likes     Like[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Comment {
+    id        Int      @id @default(autoincrement())
+    content   String
+    authorId  Int
+    postId    Int
+    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Like {
+    id        Int      @id @default(autoincrement())
+    userId    Int
+    postId    Int
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+
+    @@unique([userId, postId])
 }
 
 model Follow {
