@@ -8,6 +8,7 @@ const passport = require('./src/config/passport');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const postRoutes = require('./src/routes/postRoutes');
+const commentRoutes = require('./src/routes/commentRoutes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res) => {

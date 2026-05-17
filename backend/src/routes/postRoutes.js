@@ -1,15 +1,27 @@
-const express = require('express');
-const router = express.Router();
-
+const { Router } = require('express');
 const isAuthenticated = require('../middleware/isAuthenticated');
 const postController = require('../controllers/postController');
+const likeController = require('../controllers/likeController');
+const commentController = require('../controllers/commentController');
 
-router.use(isAuthenticated);
+const postRouter = Router();
+postRouter.use(isAuthenticated);
 
-router.get('/feed', postController.getFeed);
-router.post('/', postController.create);
+// Feed
+postRouter.get('/feed', postController.getFeed);
 
-router.get('/:id', postController.getById);
-router.delete('/:id', postController.remove);
+// Post CRUD
+postRouter.post('/', postController.create);
+postRouter.get('/:id', postController.getById);
+postRouter.delete('/:id', postController.remove);
 
-module.exports = router;
+// Likes (nested under post)
+postRouter.post('/:id/like', likeController.likePost);
+postRouter.delete('/:id/like', likeController.unlikePost);
+postRouter.get('/:id/likes', likeController.getLikesForPost);
+
+// Comments (nested under post)
+postRouter.post('/:id/comments', commentController.createComment);
+postRouter.get('/:id/comments', commentController.getCommentsForPost);
+
+module.exports = postRouter;
