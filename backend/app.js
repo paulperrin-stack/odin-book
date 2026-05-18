@@ -9,6 +9,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const postRoutes = require('./src/routes/postRoutes');
 const commentRoutes = require('./src/routes/commentRoutes');
+const followRoutes = require('./src/routes/followRoutes');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/follows', followRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res) => {
