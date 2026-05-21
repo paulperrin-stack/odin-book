@@ -17,28 +17,45 @@ function isValidEmail(email) {
 
 const register = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, username, displayName } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ status: 'Error', message: 'Email and password are required.' });
+        if (!email || !password ||!username ) {
+            return res.status(400).json({ error: 'Email, username and password are required.' });
         }
         
         if (!isValidEmail(email)) {
-            return res.status(400).json({ status: 'Error', message: 'Invalid email format.' });
+            return res.status(400).json({ error: 'Invalid email format.' });
         }
 
         if (password.length < 8) {
-            return res.status(400).json({ status: 'Error', message: 'Password must be at least 8 characters long.' });
+            return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+        }
+
+        const usernameRegex = /^[a-zA-Z0-9_.]{3,30}$/;
+
+        if (!usernameRegex.test(username.trim())) {
+            return res.status(400).json({
+                error: 'Username must be 3-30 characters and contain only letters, numbers, underscores, or periods.',
+            });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+        const normalizedUsername = username.trim();
 
         // Duplicate check
-        const existing = await prisma.user.findUnique({ 
+        const existingEmail = await prisma.user.findUnique({
             where: { email: normalizedEmail } 
         });
-        if (existing) {
-            return res.status(409).json({ message: 'Email is already registered.' }); 
+        if (existingEmail) {
+            return res.status(409).json({ error: 'Email is already registered.' });
+        }
+
+        const existingUsername = await prisma.user.findUnique({
+            where: { username: normalizedUsername },
+        });
+
+        if (existingUsername) {
+            return res.status(409).json({ error: 'Username is already taken.' });
         }
         
         const passwordHash = await bcrypt.hash(password, 12);
@@ -47,11 +64,23 @@ const register = async (req, res, next) => {
         const user = await prisma.user.create({
             data: {
                 email: normalizedEmail,
+                username: normalizedUsername,
+                displayName: displayName?.trim() || normalizedUsername,
                 passwordHash,
             },
         });
 
-        return res.status(201).json({ user: safeUser(user) });
+        req.session.regenerate((regenErr) => {
+            if (regenErr) return next(regenErr);
+
+            req.login(user, (loginErr) => {
+                if (loginErr) return next(loginErr);
+
+                return res.status(201).json({
+                    user: safeUser(user),
+                });
+            });
+        });
     } catch (err) {
         next(err);
     }
