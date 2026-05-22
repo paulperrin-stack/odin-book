@@ -58,14 +58,36 @@ const create = async (req, res, next) => {
     try {
         const { content } = req.body;
 
+        if (!content || !content.trim()) {
+            return res.status(400).json({
+                error: 'Post content is required',
+            });
+        }
+
         const post = await prisma.post.create({
             data: {
-                content,
-                authorId: req.user.id
-            }
+                content: content.trim(),
+                authorId: req.user.id,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                        avatarUrl: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        likes: true,
+                        comments: true,
+                    },
+                },
+            },
         });
 
-        res.status(201).json({ post });
+        return res.status(201).json({ post });
     } catch (err) {
         next(err);
     }

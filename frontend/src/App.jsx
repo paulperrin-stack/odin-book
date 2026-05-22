@@ -9,6 +9,7 @@ import RegisterPage from './pages/RegisterPage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import PostDetailPage from './pages/PostDetailPage';
 
 export default function App() {
     return (
@@ -25,6 +26,7 @@ export default function App() {
                         <Route path="/" element={<HomePage />} />
                         <Route path="/users" element={<UsersPage />} />
                         <Route path="/users/:username" element={<ProfilePage />} />
+                        <Route path="/posts/:id" element={<PostDetailPage />} />
                     </Route>
                 </Routes>
             </AuthProvider>
