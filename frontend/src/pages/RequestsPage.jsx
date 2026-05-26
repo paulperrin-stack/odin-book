@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client.js';
-import { userLabel, userInitial } from '../utils/user.js';
 
 export default function RequestsPage() {
     const [requests, setRequests] = useState([]);
@@ -59,7 +58,7 @@ export default function RequestsPage() {
                     <div className="user-list">
                         {requests.map((req) => {
                             const u = req.follower;
-                            const name = userLabel(u);
+                            const name = u.displayName || u.username;
 
                             return (
                                 <div key={req.id} className="user-card card">
@@ -75,16 +74,16 @@ export default function RequestsPage() {
                                             />
                                         ) : (
                                             <span className="avatar avatar--lg avatar--fallback">
-                                                {userInitial(u)}
+                                                {name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
                                             </span>
                                         )}
                                         <span className="user-card-text">
                                             <strong>{name}</strong>
-                                            {u.username && (
-                                                <span className="muted">
-                                                    @{u.username}
-                                                </span>
-                                            )}
+                                            <span className="muted">
+                                                @{u.username}
+                                            </span>
                                         </span>
                                     </Link>
 

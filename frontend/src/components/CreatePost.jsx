@@ -10,7 +10,7 @@ export default function CreatePost({ onPostCreated }) {
         e.preventDefault();
 
         if (!content.trim()) {
-            setError('Post content is required');
+            setError('Write something first.');
             return;
         }
 
@@ -32,22 +32,26 @@ export default function CreatePost({ onPostCreated }) {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            {error && <p>{error}</p>}
-
+        <form className="card create-post" onSubmit={handleSubmit}>
             <textarea
+                className="textarea"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's happening?"
-                required
+                rows={3}
             />
 
-            <button
-                type="submit"
-                disabled={submitting}
-            >
-                {submitting ? 'Posting...' : 'Post'}
-            </button>
+            <div className="create-post-foot">
+                {error && <span className="form-error">{error}</span>}
+                <span className="char-count">{content.length}</span>
+                <button
+                    type="submit"
+                    className="btn btn-accent"
+                    disabled={submitting}
+                >
+                    {submitting ? 'Posting…' : 'Post'}
+                </button>
+            </div>
         </form>
     );
 }

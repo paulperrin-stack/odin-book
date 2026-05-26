@@ -2,14 +2,15 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import PostDetailPage from './pages/PostDetailPage';
+import PostDetailPage from './pages/PostDetailPage.jsx';
+import RequestsPage from './pages/RequestsPage.jsx';
 
 export default function App() {
     return (
@@ -18,7 +19,6 @@ export default function App() {
                 <Navbar />
 
                 <Routes>
-
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
 
@@ -27,6 +27,7 @@ export default function App() {
                         <Route path="/users" element={<UsersPage />} />
                         <Route path="/users/:username" element={<ProfilePage />} />
                         <Route path="/posts/:id" element={<PostDetailPage />} />
+                        <Route path="/requests" element={<RequestsPage />} />
                     </Route>
                 </Routes>
             </AuthProvider>

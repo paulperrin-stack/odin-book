@@ -24,36 +24,43 @@ export default function HomePage() {
     }, []);
 
     function handlePostCreated(newPost) {
-        setPosts((prevPosts) => [
-            newPost,
-            ...prevPosts,
-        ]);
+        setPosts((prev) => [newPost, ...prev]);
     }
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>{error}</div>;
+    function handleDeleted(id) {
+        setPosts((prev) => prev.filter((p) => p.id !== id));
     }
 
     return (
-        <div>
-            <h1>Home</h1>
+        <main className="container">
+            <header className="page-head">
+                <h1 className="page-title">Your feed</h1>
+                <p className="muted">Posts from you and people you follow.</p>
+            </header>
 
             <CreatePost onPostCreated={handlePostCreated} />
 
-            {posts.length === 0 ? (
-                <p>No posts yet.</p>
-            ) : (
-                posts.map((post) => (
-                    <PostCard
-                        key={post.id}
-                        post={post}
-                    />
-                ))
-            )}
-        </div>
+            {loading && <p className="muted">Loading…</p>}
+            {error && <p className="form-error">{error}</p>}
+
+            {!loading &&
+                !error &&
+                (posts.length === 0 ? (
+                    <p className="muted">
+                        No posts yet — follow some people or write the first
+                        one.
+                    </p>
+                ) : (
+                    <div className="feed">
+                        {posts.map((post) => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                onDeleted={handleDeleted}
+                            />
+                        ))}
+                    </div>
+                ))}
+        </main>
     );
 }
