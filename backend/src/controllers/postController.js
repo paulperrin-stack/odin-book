@@ -1,5 +1,27 @@
 const prisma = require('../db/prismaClient');
 
+const authorSelect = {
+    select: { id: true, username: true, displayName: true, avatarUrl: true },
+};
+
+function postInclude(userId) {
+    return {
+        author: authorSelect,
+        likes: {
+            where: { userId },
+            select: { id: true },
+        },
+        _count: {
+            select: { likes: true, comments: true },
+        },
+    };
+}
+
+function shapePost(post) {
+    const { likes, ...rest } = post;
+    return { ...rest, likedByMe: likes.length > 0 };
+}
+
 const getFeed = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
@@ -13,42 +35,26 @@ const getFeed = async (req, res, next) => {
                         followers: {
                             some: {
                                 followerId: req.user.id,
-                                status: 'ACCEPTED'
-                            }
-                        }
-                    }
-                }
-            ]
+                                status: 'ACCEPTED',
+                            },
+                        },
+                    },
+                },
+            ],
         };
 
         const [posts, total] = await Promise.all([
             prisma.post.findMany({
                 where,
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                            displayName: true,
-                            avatarUrl: true
-                        }
-                    },
-                    _count: {
-                        select: {
-                            likes: true,
-                            comments: true
-                        }
-                    }
-                },
+                include: postInclude(req.user.id),
                 orderBy: { createdAt: 'desc' },
                 skip: (page - 1) * limit,
-                take: limit
+                take: limit,
             }),
-
-            prisma.post.count({ where })
+            prisma.post.count({ where }),
         ]);
 
-        res.json({ posts, total, page, limit });
+        res.json({ posts: posts.map(shapePost), total, page, limit });
     } catch (err) {
         next(err);
     }
@@ -59,9 +65,7 @@ const create = async (req, res, next) => {
         const { content } = req.body;
 
         if (!content || !content.trim()) {
-            return res.status(400).json({
-                error: 'Post content is required',
-            });
+            return res.status(400).json({ error: 'Post content is required' });
         }
 
         const post = await prisma.post.create({
@@ -69,25 +73,10 @@ const create = async (req, res, next) => {
                 content: content.trim(),
                 authorId: req.user.id,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatarUrl: true,
-                    },
-                },
-                _count: {
-                    select: {
-                        likes: true,
-                        comments: true,
-                    },
-                },
-            },
+            include: postInclude(req.user.id),
         });
 
-        return res.status(201).json({ post });
+        return res.status(201).json({ post: shapePost(post) });
     } catch (err) {
         next(err);
     }
@@ -97,29 +86,14 @@ const getById = async (req, res, next) => {
     try {
         const post = await prisma.post.findUnique({
             where: { id: Number(req.params.id) },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        displayName: true,
-                        avatarUrl: true,
-                    }
-                },
-                _count: {
-                    select: {
-                        likes: true,
-                        comments: true
-                    }
-                }
-            }
+            include: postInclude(req.user.id),
         });
 
         if (!post) {
             return res.status(404).json({ error: 'Post not found' });
         }
 
-        res.json({ post });
+        res.json({ post: shapePost(post) });
     } catch (err) {
         next(err);
     }
@@ -129,33 +103,23 @@ const getByUser = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
-        
+
         const where = {
-            author: {
-                username: req.params.username
-            }
+            author: { username: req.params.username },
         };
 
         const [posts, total] = await Promise.all([
             prisma.post.findMany({
                 where,
-                include: {
-                    _count: {
-                        select: {
-                            likes: true,
-                            comments: true
-                        }
-                    }
-                },
+                include: postInclude(req.user.id),
                 orderBy: { createdAt: 'desc' },
                 skip: (page - 1) * limit,
-                take: limit
+                take: limit,
             }),
-
-            prisma.post.count({ where })
+            prisma.post.count({ where }),
         ]);
 
-        res.json({ posts, total, page, limit });
+        res.json({ posts: posts.map(shapePost), total, page, limit });
     } catch (err) {
         next(err);
     }
@@ -164,7 +128,7 @@ const getByUser = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const post = await prisma.post.findUnique({
-            where: { id: Number(req.params.id) }
+            where: { id: Number(req.params.id) },
         });
 
         if (!post) {
@@ -176,10 +140,10 @@ const remove = async (req, res, next) => {
         }
 
         await prisma.post.delete({
-            where: { id: post.id }
+            where: { id: post.id },
         });
 
-        res.json({ message: 'Post deleted' });
+        res.json({ message: 'Post deleted' });
     } catch (err) {
         next(err);
     }

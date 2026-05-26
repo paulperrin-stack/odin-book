@@ -3,6 +3,7 @@ const { Router } = require('express');
 const isAuthenticated = require('../middleware/isAuthenticated');
 const userController = require('../controllers/userController');
 const followController = require('../controllers/followController');
+const postController = require('../controllers/postController');
 
 const userRouter = Router();
 
@@ -15,6 +16,8 @@ userRouter.delete('/:username/follow', followController.unfollow);
 
 userRouter.get('/:username/followers', followController.getFollowers);
 userRouter.get('/:username/following', followController.getFollowing);
+
+userRouter.get('/:username/posts', postController.getByUser);
 
 userRouter.patch('/me', userController.updateProfile);
 userRouter.get('/:username', userController.getProfile);
