@@ -1,85 +1,86 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id           Int      @id @default(autoincrement())
-    email        String?  @unique
-    username     String?  @unique
-    displayName  String?
-    passwordHash String?
-    githubId     String?  @unique
-    avatarUrl    String?
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  email        String?  @unique
+  username     String?  @unique
+  displayName  String?
+  bio          String?
+  passwordHash String?
+  githubId     String?  @unique
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-    posts     Post[]
-    comments  Comment[]
-    likes     Like[]
-    following Follow[] @relation("UserFollowing")
-    followers Follow[] @relation("UserFollowers")
+  posts     Post[]
+  comments  Comment[]
+  likes     Like[]
+  following Follow[]  @relation("UserFollowing")
+  followers Follow[]  @relation("UserFollowers")
 }
 
 model Post {
-    id        Int      @id @default(autoincrement())
-    content   String
-    authorId  Int
-    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-    comments  Comment[]
-    likes     Like[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  content   String
+  authorId  Int
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  likes     Like[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Comment {
-    id        Int      @id @default(autoincrement())
-    content   String
-    authorId  Int
-    postId    Int
-    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-    post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  content   String
+  authorId  Int
+  postId    Int
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Like {
-    id        Int      @id @default(autoincrement())
-    userId    Int
-    postId    Int
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-    createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  postId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
-    @@unique([userId, postId])
+  @@unique([userId, postId])
 }
 
 model Follow {
-    id          Int          @id @default(autoincrement())
-    followerId  Int
-    followingId Int
-    status      FollowStatus @default(PENDING)
-    follower    User         @relation("UserFollowing", fields: [followerId],  references: [id], onDelete: Cascade)
-    following   User         @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
-    createdAt   DateTime     @default(now())
+  id          Int          @id @default(autoincrement())
+  followerId  Int
+  followingId Int
+  status      FollowStatus @default(PENDING)
+  follower    User         @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User         @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
 
-    @@unique([followerId, followingId])
+  @@unique([followerId, followingId])
 }
 
 enum FollowStatus {
-    PENDING
-    ACCEPTED
+  PENDING
+  ACCEPTED
 }
 
 model Session {
-    sid    String   @id @db.VarChar
-    sess   Json     @db.Json
-    expire DateTime @db.Timestamp(6)
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
 
-    @@map("session")
-    @@index([expire], map: "IDX_session_expire")
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
 }
