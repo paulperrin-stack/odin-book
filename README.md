@@ -5,8 +5,6 @@ A full-stack social media application — the capstone project of
 Node.js course. Users can post, like, comment, follow each other, and browse a
 feed of posts from the people they follow.
 
-> **Live demo:** _add your deployed URL here_
-
 ## Features
 
 - **Authentication** — email/password (Passport local) and GitHub OAuth, with
