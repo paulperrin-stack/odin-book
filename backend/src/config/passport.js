@@ -11,15 +11,22 @@ passport.use(
         { usernameField: 'email' },
         async (email, password, done) => {
             try {
-                const user = await prisma.user.findUnique({ 
-                    where: { email: email.toLowerCase().trim() }
+                const user = await prisma.user.findUnique({
+                    where: { email: email.toLowerCase().trim() },
                 });
                 if (!user || !user.passwordHash) {
-                    return done(null, false, { message: 'Invalid email or password.' });
+                    return done(null, false, {
+                        message: 'Invalid email or password.',
+                    });
                 }
-                const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+                const passwordMatch = await bcrypt.compare(
+                    password,
+                    user.passwordHash
+                );
                 if (!passwordMatch) {
-                    return done(null, false, { message: 'Invalid email or password.' });
+                    return done(null, false, {
+                        message: 'Invalid email or password.',
+                    });
                 }
                 return done(null, user);
             } catch (err) {
@@ -41,6 +48,11 @@ passport.use(
             try {
                 const githubId = String(profile.id);
 
+                // Always have a username. GitHub usually provides `profile.username`
+                // (the login), but fall back so the column is never null —
+                // null usernames break profile links and the UI.
+                const fallbackUsername = `gh_${githubId}`;
+
                 const existingByGitHub = await prisma.user.findUnique({
                     where: { githubId },
                 });
@@ -58,26 +70,34 @@ passport.use(
                     if (existingByEmail) {
                         const linked = await prisma.user.update({
                             where: { id: existingByEmail.id },
-                            data: { 
+                            data: {
                                 githubId,
-                                username: 
-                                    existingByEmail.username ?? profile.username ?? null,
+                                username:
+                                    existingByEmail.username ??
+                                    profile.username ??
+                                    fallbackUsername,
                                 displayName:
-                                    existingByEmail.displayName ?? profile.displayName ?? null,
+                                    existingByEmail.displayName ??
+                                    profile.displayName ??
+                                    profile.username ??
+                                    null,
                                 avatarUrl:
-                                    existingByEmail.avatarUrl ?? profile.photos?.[0]?.value ?? null,
+                                    existingByEmail.avatarUrl ??
+                                    profile.photos?.[0]?.value ??
+                                    null,
                             },
                         });
                         return done(null, linked);
                     }
                 }
-                
+
                 const created = await prisma.user.create({
                     data: {
                         githubId,
                         email,
-                        username: profile.username ?? null,
-                        displayName: profile.displayName ?? null,
+                        username: profile.username ?? fallbackUsername,
+                        displayName:
+                            profile.displayName ?? profile.username ?? null,
                         avatarUrl: profile.photos?.[0]?.value ?? null,
                     },
                 });
@@ -86,7 +106,7 @@ passport.use(
                 return done(err);
             }
         }
-    )      
+    )
 );
 
 passport.serializeUser((user, done) => {
