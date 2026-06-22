@@ -1,111 +1,152 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../api/client.js';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
 
-export default function RequestsPage() {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
+const API_URL = import.meta.env.VITE_API_URL;
+
+// Mirror the backend rule so users get instant feedback.
+const USERNAME_REGEX = /^[a-zA-Z0-9_.]{3,30}$/;
+
+export default function RegisterPage() {
+    const { register } = useAuth();
+    const navigate = useNavigate();
+
+    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
+    const [displayName, setDisplayName] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => {
-        async function load() {
-            try {
-                const data = await api.get('/api/follows/pending');
-                setRequests(data.requests);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
+    function validate() {
+        if (!email || !username || !password) {
+            return 'Email, username, and password are required.';
+        }
+        if (!USERNAME_REGEX.test(username.trim())) {
+            return 'Username must be 3–30 characters: letters, numbers, underscores, or periods.';
+        }
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long.';
+        }
+        return null;
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setError(null);
+
+        const validationError = validate();
+        if (validationError) {
+            setError(validationError);
+            return;
         }
 
-        load();
-    }, []);
+        setSubmitting(true);
 
-    async function accept(followId) {
         try {
-            await api.post(`/api/follows/${followId}/accept`);
-            setRequests((prev) => prev.filter((r) => r.id !== followId));
+            await register(
+                email.trim(),
+                password,
+                username.trim(),
+                displayName.trim() || undefined
+            );
+            navigate('/');
         } catch (err) {
-            alert(err.message);
+            setError(err.message);
+        } finally {
+            setSubmitting(false);
         }
     }
 
-    async function decline(followId) {
-        try {
-            await api.delete(`/api/follows/${followId}`);
-            setRequests((prev) => prev.filter((r) => r.id !== followId));
-        } catch (err) {
-            alert(err.message);
-        }
+    function handleGithub() {
+        // Full-page redirect to the backend OAuth route.
+        window.location.href = `${API_URL}/api/auth/github`;
     }
 
     return (
-        <main className="container">
-            <header className="page-head">
-                <h1 className="page-title">Follow requests</h1>
-                <p className="muted">People who want to follow you.</p>
-            </header>
+        <div className="auth-wrap">
+            <div className="auth-card card">
+                <h1 className="auth-title">Create your account</h1>
+                <p className="auth-sub">Join odinbook and start posting.</p>
 
-            {loading && <p className="muted">Loading…</p>}
-            {error && <p className="form-error">{error}</p>}
+                {error && (
+                    <p className="form-error" style={{ marginBottom: 12 }}>
+                        {error}
+                    </p>
+                )}
 
-            {!loading &&
-                !error &&
-                (requests.length === 0 ? (
-                    <p className="muted">No pending requests.</p>
-                ) : (
-                    <div className="user-list">
-                        {requests.map((req) => {
-                            const u = req.follower;
-                            const name = u.displayName || u.username;
-
-                            return (
-                                <div key={req.id} className="user-card card">
-                                    <Link
-                                        to={`/users/${u.username}`}
-                                        className="user-card-main"
-                                    >
-                                        {u.avatarUrl ? (
-                                            <img
-                                                src={u.avatarUrl}
-                                                alt=""
-                                                className="avatar avatar--lg"
-                                            />
-                                        ) : (
-                                            <span className="avatar avatar--lg avatar--fallback">
-                                                {name
-                                                    .charAt(0)
-                                                    .toUpperCase()}
-                                            </span>
-                                        )}
-                                        <span className="user-card-text">
-                                            <strong>{name}</strong>
-                                            <span className="muted">
-                                                @{u.username}
-                                            </span>
-                                        </span>
-                                    </Link>
-
-                                    <div className="request-actions">
-                                        <button
-                                            className="btn btn-accent btn-sm"
-                                            onClick={() => accept(req.id)}
-                                        >
-                                            Accept
-                                        </button>
-                                        <button
-                                            className="btn btn-ghost btn-sm"
-                                            onClick={() => decline(req.id)}
-                                        >
-                                            Decline
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                <form onSubmit={handleSubmit}>
+                    <div className="field">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
                     </div>
-                ))}
-        </main>
+
+                    <div className="field">
+                        <label htmlFor="username">Username</label>
+                        <input
+                            id="username"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="3–30 characters"
+                            required
+                        />
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="displayName">
+                            Display name{' '}
+                            <span className="muted">(optional)</span>
+                        </label>
+                        <input
+                            id="displayName"
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="At least 8 characters"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn btn-accent btn-block"
+                        disabled={submitting}
+                    >
+                        {submitting ? 'Creating account…' : 'Sign up'}
+                    </button>
+                </form>
+
+                <div className="auth-divider">or</div>
+
+                <button
+                    type="button"
+                    className="btn btn-github"
+                    onClick={handleGithub}
+                >
+                    Continue with GitHub
+                </button>
+
+                <p className="auth-foot">
+                    Already have an account? <Link to="/login">Log in</Link>
+                </p>
+            </div>
+        </div>
     );
 }
