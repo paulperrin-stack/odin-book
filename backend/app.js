@@ -13,6 +13,14 @@ const followRoutes = require('./src/routes/followRoutes');
 
 const app = express();
 
+// Render (like most PaaS hosts) terminates HTTPS at a proxy and forwards
+// the request to our app over plain HTTP. Express must trust that proxy,
+// otherwise it thinks the connection is insecure and refuses to set the
+// `secure` session cookie — which would silently break login in production.
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 // Middleware
 app.use(
     cors({
