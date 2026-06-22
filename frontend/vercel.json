@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://odin-book-vhua.onrender.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "https://odin-book-vhua.onrender.com/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
