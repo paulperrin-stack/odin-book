@@ -5,6 +5,9 @@ A full-stack social media application — the capstone project of
 Node.js course. Users can post, like, comment, follow each other, and browse a
 feed of posts from the people they follow.
 
+**Live demo:** https://odin-book-kappa.vercel.app  
+**API:** https://odin-book-vhua.onrender.com
+
 ## Features
 
 - **Authentication** — email/password (Passport local) and GitHub OAuth, with
@@ -79,6 +82,27 @@ npm run dev
 
 The app runs at `http://localhost:5173`.
 
+> **Note:** In production the frontend proxies all `/api/*` requests through
+> Vercel to the backend, so no `VITE_API_URL` is needed in the deployed
+> environment. The `.env` file above is for local development only.
+
+## Deployment
+
+The app is deployed on a free stack:
+
+| Layer    | Service                                      |
+| -------- | -------------------------------------------- |
+| Frontend | [Vercel](https://vercel.com)                 |
+| Backend  | [Render](https://render.com) (free tier)     |
+| Database | [Neon](https://neon.tech) (serverless Postgres) |
+
+The frontend proxies API requests through Vercel (`/api/*` → Render) so the
+session cookie is same-site and works across browsers without third-party
+cookie exceptions.
+
+> The Render free tier spins down after 15 minutes of inactivity. The first
+> request after a period of inactivity may take 30–60 seconds to respond.
+
 ## API overview
 
 | Method | Endpoint                          | Description                       |
@@ -87,7 +111,7 @@ The app runs at `http://localhost:5173`.
 | POST   | `/api/auth/login`                 | Log in                            |
 | POST   | `/api/auth/logout`                | Log out                           |
 | GET    | `/api/auth/me`                    | Current user                      |
-| GET    | `/api/auth/github`                | Start GitHub OAuth                 |
+| GET    | `/api/auth/github`                | Start GitHub OAuth                |
 | GET    | `/api/posts/feed`                 | Feed for the current user         |
 | POST   | `/api/posts`                      | Create a post                     |
 | GET    | `/api/posts/:id`                  | Get a post                        |
